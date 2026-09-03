@@ -4,9 +4,10 @@ produto: str = ""
 quantidade: int = 0
 preco_agranel: float = 0.0
 preco_atacado: float = 0.0
-lista_compras: list = []
 valor_final: float = 0.0
-
+escolha_acao: str = ""
+lista_compras: list = []
+lista_removidos: list = []
 #------------- Função sendo executada -------------
 def verificar_quantidade():
     while True:
@@ -39,6 +40,26 @@ def atualiza_carrinho(lista_compraz, produtos, quantidades, preco_agr, preco_ata
         lista_compraz.append(novo_item)
     return valor_prod
 
+def remover_item(lista_compraz):
+    end = True
+    print(f"\n------ Seu carrinho de compras ------\n")
+    for i, elem in enumerate(lista_compraz, 1):
+        print(
+            f"{i}. Produto: {elem['produto']}, Quantidade: {elem['quantidade']}, Valor: R${elem['valor_produto']}")
+    while end != False:
+        try:
+            remove = int(input("Quais desses itens acima deseja excluir? "))
+            if remove > 0:
+                remove = remove - 1
+                li_remov = lista_compraz.pop(remove)
+                end = False
+            else:
+                raise IndexError
+        except IndexError:
+            print("O Valor informardo não está presente nessa lista.")
+        except ValueError:
+            print("Essa função busca o item a ser removido apenas pelo numero de indexação.")
+    return li_remov
 #------------- Programa sendo executado -------------
 while escolha_produto != 'sair':
     print(f"------ Lista de Produtos e Preços ------\n1. Banana -> R$ 0.30 preço granel ou R$ 0.25 preço atacado\n"
@@ -74,6 +95,17 @@ while escolha_produto != 'sair':
         if escolha_produto in ["1", "2", "3", "4", "banana", "laranja", "maca", "kiwi"] and quantidade > 0:
             valor_produto = atualiza_carrinho(lista_compras,produto,quantidade,preco_agranel,preco_atacado)
             print(f"\nVocê escolheu comprar {quantidade} x {produto}\nValor total: R${valor_produto:.2f}\n")
+            escolha_acao = input("------ Escolha o que deseja fazer agora? ------\n1. Adicionar um novo item ao carrinho;\n2. Excluir um item do carrinho"
+                                 "\n3. Sair do programa").lower().strip()[0:1]
+            match escolha_acao:
+                case "1" | "a":
+                    print("Você escolheu adicionar um novo item ao carrinho!\n")
+                case "2" | "e" | "r":
+                    print(f"Você escolheu excluir um novo item do carrinho!\n")
+                    lista_removidos = remover_item(lista_compras)
+                case "4" | "s":
+                    print("Você esscolheu sair do programa!\nO sistema estará encerrando...\n\nVolte sempre!")
+                    escolha_produto = "sair"
     except KeyboardInterrupt:
         print("Você optou por encerrar o programa antecipadamente!")
     except EOFError:
