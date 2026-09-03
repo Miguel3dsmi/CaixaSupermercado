@@ -1,13 +1,15 @@
 #------------- Declaração de variáveis -------------
 escolha_produto: str = ""
 produto: str = ""
+questao: str = ""
+escolha_acao: str = ""
 quantidade: int = 0
 preco_agranel: float = 0.0
 preco_atacado: float = 0.0
 valor_final: float = 0.0
-escolha_acao: str = ""
 lista_compras: list = []
 lista_removidos: list = []
+
 #------------- Função sendo executada -------------
 def verificar_quantidade():
     while True:
@@ -42,10 +44,11 @@ def atualiza_carrinho(lista_compraz, produtos, quantidades, preco_agr, preco_ata
 
 def remover_item(lista_compraz):
     end = True
-    print(f"\n------ Seu carrinho de compras ------\n")
-    for i, elem in enumerate(lista_compraz, 1):
+    li_remov = None
+    print(f"------ Seu carrinho de compras ------\n")
+    for e, elem in enumerate(lista_compraz, 1):
         print(
-            f"{i}. Produto: {elem['produto']}, Quantidade: {elem['quantidade']}, Valor: R${elem['valor_produto']}")
+            f"{e}. Produto: {elem['produto']}, Quantidade: {elem['quantidade']}, Valor: R${elem['valor_produto']:.2f}")
     while end != False:
         try:
             remove = int(input("Quais desses itens acima deseja excluir? "))
@@ -60,6 +63,35 @@ def remover_item(lista_compraz):
         except ValueError:
             print("Essa função busca o item a ser removido apenas pelo numero de indexação.")
     return li_remov
+
+def visualizar_exclusao (lista_removidoz):
+    if lista_removidoz:
+        print("Você escolheu visualizar os item que foram excluídos do carrinho!\n")
+        for e, elem in enumerate(lista_removidoz, 1):
+            print(f"{e}. Produto removido: {elem['produto']}\n")
+    else:
+        print("Lista Vazia")
+
+def restaurar (lista_removidoz):
+    rest= []
+    escolha = ""
+    while escolha != "sair" and lista_removidoz:
+        for e, elem in enumerate(lista_removidoz, 1):
+            print(f"{e}. Produto: {elem['produto']}\n")
+        try:
+            escolha = input("Escolha qual desses itens deseja restaurar ou escolha 'Sair' caso queira encerrar: ").lower().strip()
+            if escolha != "sair":
+                escolha = int(escolha)
+                if escolha > 0:
+                    escolha -= 1
+                    rest.append(lista_removidoz.pop(escolha))
+                else:
+                    print('Escolha invalida!\nLista não possui item número 0.')
+        except IndexError:
+            print("O Valor informardo não está presente nessa lista.")
+        except ValueError:
+            print("Essa função busca o item a ser removido apenas pelo numero de indexação.")
+    return rest
 #------------- Programa sendo executado -------------
 while escolha_produto != 'sair':
     print(f"------ Lista de Produtos e Preços ------\n1. Banana -> R$ 0.30 preço granel ou R$ 0.25 preço atacado\n"
@@ -96,15 +128,26 @@ while escolha_produto != 'sair':
             valor_produto = atualiza_carrinho(lista_compras,produto,quantidade,preco_agranel,preco_atacado)
             print(f"\nVocê escolheu comprar {quantidade} x {produto}\nValor total: R${valor_produto:.2f}\n")
             escolha_acao = input("------ Escolha o que deseja fazer agora? ------\n1. Adicionar um novo item ao carrinho;\n2. Excluir um item do carrinho"
-                                 "\n3. Sair do programa").lower().strip()[0:1]
+                                 "\n3. Visualizar itens excluidos\n4. Sair do programa \n").lower().strip()[0:1]
             match escolha_acao:
                 case "1" | "a":
                     print("Você escolheu adicionar um novo item ao carrinho!\n")
                 case "2" | "e" | "r":
                     print(f"Você escolheu excluir um novo item do carrinho!\n")
-                    lista_removidos = remover_item(lista_compras)
+                    lista_removidos.append(remover_item(lista_compras))
+                case "3" | "v":
+                    visualizar_exclusao(lista_removidos)
+                    if lista_removidos:
+                        questao = input("Deseja restaurar algum dos itens listados? (s/n) ").strip().lower()[0:1]
+                        while questao not in ["s","n"]:
+                                print("Responda apenas com 's' para sim ou 'n' para não.")
+                                questao = input("Deseja restaurar algum dos itens listados? (s/n): ").strip().lower()[0:1]
+                        if questao == "s":
+                            lista_compras.extend(restaurar(lista_removidos))
+                        else:
+                            print("Voltando ao menu.")
                 case "4" | "s":
-                    print("Você esscolheu sair do programa!\nO sistema estará encerrando...\n\nVolte sempre!")
+                    print("Você escolheu sair do programa!\nO sistema estará encerrando...\n\nVolte sempre!")
                     escolha_produto = "sair"
     except KeyboardInterrupt:
         print("Você optou por encerrar o programa antecipadamente!")
@@ -112,6 +155,6 @@ while escolha_produto != 'sair':
         print("Programa chegou ao fim sem receber os valores esperados!")
 print(f"\n------ Seu carrinho de compras ------\n")
 for i, item in enumerate(lista_compras,1):
-    print(f"{i}. Produto: {item['produto']}, Quantidade: {item['quantidade']}, Valor: R${item['valor_produto']}")
+    print(f"{i}. Produto: {item['produto']}, Quantidade: {item['quantidade']}, Valor: R${item['valor_produto']:.2f}")
     valor_final+= item['valor_produto']
 print(f"\nO valor total da compra foi R${valor_final:.2f}")
