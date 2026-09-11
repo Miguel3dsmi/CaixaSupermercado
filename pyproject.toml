@@ -2,4 +2,8 @@
 name = "projeto-caixa"
 version = "0.1.0"
 requires-python = ">=3.14"
-dependencies = []
+dependencies = [
+    "mysql-connector-python>=26.7.0",
+    "pandas>=3.0.5",
+    "pandas-stubs~=3.0.5",
+]

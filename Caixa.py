@@ -1,3 +1,6 @@
+import pandas as pd
+import mysql.connector
+
 #------------- Declaração de variáveis -------------
 escolha_produto: str = ""
 produto: str = ""
@@ -9,6 +12,7 @@ preco_atacado: float = 0.0
 valor_final: float = 0.0
 lista_compras: list = []
 lista_removidos: list = []
+produto_selecionado: dict = {'idprodutos':"", 'nome':"", 'medida':"", 'valor_und':"", 'valor_atacado':""}
 
 #------------- Função sendo executada -------------
 def verificar_quantidade():
@@ -21,24 +25,24 @@ def verificar_quantidade():
         except ValueError:
             print("Entrada inválida! Digite apenas números inteiros.\n")
 
-def atualiza_carrinho(lista_compraz, produtos, quantidades, preco_agr, preco_atac):
+def atualiza_carrinho(lista_compraz, prod_sele, qtd):
     presente = False
     valor_prod = 0
     for elem in lista_compraz:
-        if elem['produto'] == produtos:
-            elem['quantidade'] += quantidades
+        if elem['produto'] == prod_sele['nome']:
+            elem['quantidade'] += qtd
             if elem['quantidade'] < 12:
-                valor_prod = elem['quantidade'] * preco_agr
+                valor_prod = elem['quantidade'] * prod_sele['valor_und']
             else:
-                valor_prod = elem['quantidade'] * preco_atac
+                valor_prod = elem['quantidade'] * prod_sele['valor_atacado']
             elem['valor_produto'] = valor_prod
             presente = True
     if not presente:
-        if quantidades < 12:
-            valor_prod = quantidades * preco_agr
+        if qtd < 12:
+            valor_prod = qtd * prod_sele['valor_und']
         else:
-            valor_prod = quantidades * preco_atac
-        novo_item = {"produto": produtos, "quantidade": quantidades, "valor_produto": valor_prod}
+            valor_prod = qtd * prod_sele['valor_atacado']
+        novo_item = {"produto": prod_sele['nome'], "quantidade": qtd, "valor_produto": valor_prod}
         lista_compraz.append(novo_item)
     return valor_prod
 
@@ -55,6 +59,7 @@ def remover_item(lista_compraz):
             if remove > 0:
                 remove = remove - 1
                 li_remov = lista_compraz.pop(remove)
+                print(f"{remove} excluído.")
                 end = False
             else:
                 raise IndexError
@@ -92,41 +97,27 @@ def restaurar (lista_removidoz):
         except ValueError:
             print("Essa função busca o item a ser removido apenas pelo numero de indexação.")
     return rest
+
 #------------- Programa sendo executado -------------
+data = pd.read_csv("Produtos.csv") #Sistema lendo os arquivos
+mercadorias = data.to_dict(orient="records") #Sistema convertendo os arquivos em dicionário
+
 while escolha_produto != 'sair':
-    print(f"------ Lista de Produtos e Preços ------\n1. Banana -> R$ 0.30 preço granel ou R$ 0.25 preço atacado\n"
-          f"2. Laranja -> R$ 0.40 preco granel ou R$ 0.35 preco atacado\n3. Maça -> R$ 0.50 preco granel ou R$ 0.45 preço atacado\n"
-          f"4. Kiwi -> R$ 0.40 preço granel ou R$ 0.30 preço atacado\n\nEscolha o produto desejado ou digite 'SAIR' para sair:")
+    print(f"------ Lista de Produtos ------\nEscolha um dos itens abaixo:\n(recomendamos inserir o numero do produto)\n")
+    for i,item in enumerate(mercadorias, 1):
+        print(f"{i}. {item['nome']}")
+    print(f"\nEscolha o produto desejado ou digite 'SAIR' para sair!")
     try:
-        escolha_produto = input("Escolha o produto desejado: ").lower().replace("ç","c").strip()
-        match escolha_produto:
-            case "1" | "banana":
-                print("Você escolheu Banana!")
-                produto = "banana"
-                preco_agranel, preco_atacado = 0.3, 0.25
-                quantidade = verificar_quantidade()
-            case "2"| "laranja":
-                print("Você escolheu Laranja!")
-                produto = "laranja"
-                preco_agranel, preco_atacado = 0.4, 0.35
-                quantidade = verificar_quantidade()
-            case "3"| "maca":
-                print("Você escolheu Maça!")
-                produto = "maça"
-                preco_agranel, preco_atacado = 0.5, 0.45
-                quantidade = verificar_quantidade()
-            case "4"| "kiwi":
-                print("Você escolheu Kiwi!")
-                produto = "kiwi"
-                preco_agranel, preco_atacado = 0.4, 0.3
-                quantidade = verificar_quantidade()
-            case "sair":
-                print("Você escolheu encerrar essa operação.\nO sistema estará encerrando...\n\nVolte sempre!")
-            case _:
-                print("Opção inválida\n")
-        if escolha_produto in ["1", "2", "3", "4", "banana", "laranja", "maca", "kiwi"] and quantidade > 0:
-            valor_produto = atualiza_carrinho(lista_compras,produto,quantidade,preco_agranel,preco_atacado)
-            print(f"\nVocê escolheu comprar {quantidade} x {produto}\nValor total: R${valor_produto:.2f}\n")
+        escolha_produto = input("Escolha o produto desejado: ").lower().replace("ç","c").replace("ã","a").strip()
+        if escolha_produto != "sair":
+            for item in mercadorias:
+                if str(item['idprodutos']) == escolha_produto or item['nome'].lower() == escolha_produto:
+                    produto_selecionado = item
+                    print("\nProduto encontrado!")
+                    quantidade = verificar_quantidade()
+                    break
+            valor_produto = atualiza_carrinho(lista_compras, produto_selecionado, quantidade)
+            print(f"\nVocê escolheu comprar {quantidade} x {produto_selecionado['nome']}\nValor total: R${valor_produto:.2f}\n")
             escolha_acao = input("------ Escolha o que deseja fazer agora? ------\n1. Adicionar um novo item ao carrinho;\n2. Excluir um item do carrinho"
                                  "\n3. Visualizar itens excluidos\n4. Sair do programa \n").lower().strip()[0:1]
             match escolha_acao:
@@ -149,10 +140,14 @@ while escolha_produto != 'sair':
                 case "4" | "s":
                     print("Você escolheu sair do programa!\nO sistema estará encerrando...\n\nVolte sempre!")
                     escolha_produto = "sair"
+        else:
+            print("Você escolheu encerrar essa operação.\nO sistema estará encerrando...\nVolte sempre!")
     except KeyboardInterrupt:
-        print("Você optou por encerrar o programa antecipadamente!")
+        print("\nVocê optou por encerrar o programa antecipadamente!")
     except EOFError:
-        print("Programa chegou ao fim sem receber os valores esperados!")
+        print("\nPrograma chegou ao fim sem receber os valores esperados!")
+    except ValueError:
+        print("\nProduto informado não condiz com itens no sistema!\nTente novamente!\n\n")
 print(f"\n------ Seu carrinho de compras ------\n")
 for i, item in enumerate(lista_compras,1):
     print(f"{i}. Produto: {item['produto']}, Quantidade: {item['quantidade']}, Valor: R${item['valor_produto']:.2f}")
