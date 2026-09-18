@@ -1,5 +1,7 @@
+import os
 import pandas as pd
 import mysql.connector
+from dotenv import load_dotenv
 
 #------------- Declaração de variáveis -------------
 escolha_produto: str = ""
@@ -17,8 +19,8 @@ produto_selecionado: dict = {'idprodutos':"", 'nome':"", 'medida':"", 'valor_und
 #------------- Função sendo executada -------------
 def ler_lista_produtos():
     print(f"------ Lista de Produtos ------\nEscolha um dos itens abaixo:\n(recomendamos inserir o numero do produto)")
-    for i, item in enumerate(mercadorias, 1):
-        print(f"{i}. {item['nome']}")
+    for e, elem in enumerate(mercadorias, 1):
+        print(f"{e}. {elem['nome']}")
 
 def verificar_quantidade():
     while True:
@@ -106,10 +108,26 @@ def restaurar (lista_removidoz):
             print("Essa função busca o item a ser removido apenas pelo numero de indexação.")
     return rest
 
-#------------- Programa sendo executado -------------
-data = pd.read_csv("Produtos.csv")
-mercadorias = data.to_dict(orient="records") #Sistema convertendo os arquivos em dicionário
+#------------- Conectando ao banco de dados -------------
+load_dotenv()
 
+HOST = os.getenv("DB_HOST")
+USUARIO = os.getenv("DB_USER")
+SENHA = os.getenv("DB_PASSWORD")
+BANCO = os.getenv("DB_NAME")
+conexao = mysql.connector.connect(
+    host = HOST,
+    user = USUARIO,
+    password = SENHA,
+    database = BANCO
+)
+
+query = "SELECT * FROM produtos"
+data = pd.read_sql_query(query, conexao)
+mercadorias = data.to_dict(orient="records")
+conexao.close()
+
+#------------- Programa sendo executado -------------
 ler_lista_produtos()
 print(f"\nEscolha o produto desejado ou digite 'SAIR' para sair!")
 while escolha_produto != 'sair':
