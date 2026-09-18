@@ -6,4 +6,5 @@ dependencies = [
     "mysql-connector-python>=26.7.0",
     "pandas>=3.0.5",
     "pandas-stubs~=3.0.5",
+    "python-dotenv>=1.2.3",
 ]
